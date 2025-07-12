@@ -1,0 +1,24 @@
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+# Docker
+# Ignore local override files
+docker-compose.override.yml
+
+# Ignore persistent data volumes
+influxdb_data/
+grafana_data/
+
+# IDE & Editor specific
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln 

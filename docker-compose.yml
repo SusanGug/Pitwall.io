@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./influxdb_data:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=f1-user
+      - DOCKER_INFLUXDB_INIT_PASSWORD=f1-password
+      - DOCKER_INFLUXDB_INIT_ORG=f1-org
+      - DOCKER_INFLUXDB_INIT_BUCKET=f1-telemetry
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=f1-super-secret-token
+    networks:
+      - f1-dashboard
+
+  telegraf:
+    build: ./telegraf
+    container_name: telegraf
+    ports:
+      - "20777:20777/udp"
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./f1_24_telemetry_parser.py:/f1_24_telemetry_parser.py:ro
+      - ./packets:/packets:ro
+    depends_on:
+      - influxdb
+    environment:
+      - INFLUX_TOKEN=f1-super-secret-token
+    networks:
+      - f1-dashboard
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - influxdb
+    networks:
+      - f1-dashboard
+
+networks:
+  f1-dashboard:
+    driver: bridge 
