@@ -1,0 +1,3 @@
+# Enforce Unix-style line endings (LF) for all text files to ensure
+# cross-platform consistency, especially between Windows hosts and Linux containers.
+* text=auto eol=lf 

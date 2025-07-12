@@ -1,8 +1,8 @@
-# F1 24 Real-Time Telemetry Dashboard
+# Pitwall.io: F1 24 Real-Time Telemetry Dashboard
 
 ## Overview
 
-This project provides a professional-grade, real-time telemetry analysis platform for the F1 24 game. The core purpose is to empower drivers to use data-driven insights to improve their performance, refine their race craft, and gain a competitive edge.
+This project, Pitwall.io, provides a professional-grade, real-time telemetry analysis platform for the F1 24 game. The core purpose is to empower drivers to use data-driven insights to improve their performance, refine their race craft, and gain a competitive edge.
 
 By capturing and visualizing live data from the car—such as throttle, brake, steering, and speed—you can move beyond guesswork and start analyzing your driving with precision. This tool is designed for serious racers who want to:
 
