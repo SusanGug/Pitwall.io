@@ -4,6 +4,8 @@
 
 This project provides a professional-grade, real-time telemetry analysis platform for the **F1 24** game, orchestrated entirely with Docker. It captures live UDP data from the game, processes it with a custom Python parser, stores it in InfluxDB, and visualizes it on a pre-configured Grafana dashboard.
 
+![ApexDashboardDemoVideo](assets/ApexDashboardDemo.gif)
+
 This tool is designed for serious racers who want to use data-driven insights to refine their race craft, optimize lap times, and gain a competitive edge.
 
 ### Features
