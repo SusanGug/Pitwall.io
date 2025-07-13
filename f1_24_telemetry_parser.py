@@ -9,6 +9,7 @@ sys.path.append('/packets')
 from packets.packet_header import PacketHeader
 from packets.packet_car_telemetry import PacketCarTelemetryData
 from packets.packet_participants import PacketParticipantsData
+from packets.packet_lap_data import PacketLapData
 
 # UDP settings
 UDP_IP = "0.0.0.0"
@@ -51,6 +52,10 @@ def process_car_telemetry(packet: PacketCarTelemetryData):
     player_car_index = packet.m_header.m_playerCarIndex
     for i, car_telemetry in enumerate(packet.m_carTelemetryData):
         tags = {'carIndex': str(i)} # FIX: Ensure carIndex is always a string
+        
+        if i == player_car_index:
+            tags['isPlayer'] = "true"
+
         fields = {
             'speed': car_telemetry.m_speed,
             'throttle': car_telemetry.m_throttle,
@@ -94,6 +99,47 @@ def process_car_telemetry(packet: PacketCarTelemetryData):
         if line:
             print(line)
 
+def process_lap_data(packet: PacketLapData):
+    """
+    Processes the parsed Lap Data packet and prints InfluxDB line protocol.
+    """
+    player_car_index = packet.m_header.m_playerCarIndex
+    for i, lap_data in enumerate(packet.m_lapData):
+        tags = {'carIndex': str(i)}
+        if i == player_car_index:
+            tags['isPlayer'] = "true"
+        
+        fields = {
+            'lastLapTimeInMS': lap_data.m_lastLapTimeInMS,
+            'currentLapTimeInMS': lap_data.m_currentLapTimeInMS,
+            'sector1TimeInMS': (lap_data.m_sector1TimeMinutesPart * 60000) + lap_data.m_sector1TimeMSPart,
+            'sector2TimeInMS': (lap_data.m_sector2TimeMinutesPart * 60000) + lap_data.m_sector2TimeMSPart,
+            'lapDistance': lap_data.m_lapDistance,
+            'totalDistance': lap_data.m_totalDistance,
+            'safetyCarDelta': lap_data.m_safetyCarDelta,
+            'carPosition': lap_data.m_carPosition,
+            'currentLapNum': lap_data.m_currentLapNum,
+            'pitStatus': lap_data.m_pitStatus,
+            'numPitStops': lap_data.m_numPitStops,
+            'sector': lap_data.m_sector,
+            'currentLapInvalid': lap_data.m_currentLapInvalid,
+            'penalties': lap_data.m_penalties,
+            'totalWarnings': lap_data.m_totalWarnings,
+            'cornerCuttingWarnings': lap_data.m_cornerCuttingWarnings,
+            'gridPosition': lap_data.m_gridPosition,
+            'driverStatus': lap_data.m_driverStatus,
+            'resultStatus': lap_data.m_resultStatus,
+        }
+
+        # --- TEMPORARY DEBUGGING ---
+        if i == player_car_index:
+            print(f"DEBUG - Player LapData Fields: {fields}", file=sys.stderr)
+        # -------------------------
+        
+        line = to_influx('LapData', fields, tags)
+        if line:
+            print(line)
+
 def process_participants_data(packet: PacketParticipantsData):
     """
     Processes the parsed Participants packet and prints InfluxDB line protocol.
@@ -120,25 +166,51 @@ def main():
         print("Listening for F1 24 telemetry on port 20777...", file=sys.stderr)
 
         while True:
-            data, addr = sock.recvfrom(2048)
+            data, addr = sock.recvfrom(2048) # Receive a chunk of data
 
-            header = PacketHeader.from_bytes(data)
-            if not header:
-                continue
+            while len(data) >= 29: # Minimum packet size (header)
+                header = PacketHeader.from_bytes(data)
+                if not header:
+                    # If header is invalid, we can't trust the rest of the chunk
+                    break 
+
+                packet_id = header.m_packetId
+                
+                # Determine packet size based on ID to slice correctly
+                packet_size = 0
+                if packet_id == 2:
+                    packet_size = PacketLapData.PACKET_SIZE
+                elif packet_id == 4:
+                    packet_size = PacketParticipantsData.PACKET_SIZE 
+                elif packet_id == 6:
+                    packet_size = PacketCarTelemetryData.PACKET_SIZE
+                
+                # Add other packet sizes here as you implement them
+                
+                if packet_size > 0 and len(data) >= packet_size:
+                    # Slice the exact packet from the buffer
+                    current_packet_data = data[:packet_size]
+
+                    if packet_id == 2:
+                        lap_data_packet = PacketLapData.from_bytes(current_packet_data)
+                        if lap_data_packet:
+                            process_lap_data(lap_data_packet)
+                    elif packet_id == 4:
+                        participants_packet = PacketParticipantsData.from_bytes(current_packet_data)
+                        if participants_packet:
+                            process_participants_data(participants_packet)
+                    elif packet_id == 6:
+                        telemetry_packet = PacketCarTelemetryData.from_bytes(current_packet_data)
+                        if telemetry_packet:
+                            process_car_telemetry(telemetry_packet)
+
+                    # Remove the processed packet from the buffer
+                    data = data[packet_size:]
+                else:
+                    # Not enough data for a full packet of this type, or unknown packet.
+                    # This could happen with the last packet in a chunk.
+                    break
             
-            packet_id = header.m_packetId
-            print(f"Received Packet ID: {packet_id} with size: {len(data)}", file=sys.stderr)
-
-            if packet_id == 4:
-                participants_packet = PacketParticipantsData.from_bytes(data)
-                if participants_packet:
-                    process_participants_data(participants_packet)
-            elif packet_id == 6:
-                telemetry_packet = PacketCarTelemetryData.from_bytes(data)
-                if telemetry_packet:
-                    process_car_telemetry(telemetry_packet)
-
-            # Add other packet parsers here
             sys.stdout.flush()
 
     except Exception as e:

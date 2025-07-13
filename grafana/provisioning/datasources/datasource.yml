@@ -1,0 +1,15 @@
+apiVersion: 1
+
+datasources:
+  - name: InfluxDB-F1
+    uid: f1-influx-ds
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    jsonData:
+      version: Flux
+      organization: my-org
+      defaultBucket: f1-telemetry
+      tlsSkipVerify: true
+    secureJsonData:
+      token: '${INFLUXDB_TOKEN}' 
