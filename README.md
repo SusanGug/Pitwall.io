@@ -43,7 +43,7 @@ This tool is designed for serious racers who want to use data-driven insights to
     - **UDP IP Address:** Your computer's local network IP address.
         - **Windows:** Open Command Prompt and type `ipconfig`. Look for the "IPv4 Address".
         - **macOS/Linux:** Open a terminal and type `ip a` or `ifconfig`. Look for the `inet` address.
-    - **UDP Port:** `20777`
+    - **UDP Port:** `20777` (This is the default port in the game, only edit if you know what you are doing).
     - **UDP Send Rate:** `60 Hz` is recommended for smooth data.
     - **UDP Format:** `2024`
 
