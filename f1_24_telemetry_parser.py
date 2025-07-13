@@ -130,11 +130,6 @@ def process_lap_data(packet: PacketLapData):
             'driverStatus': lap_data.m_driverStatus,
             'resultStatus': lap_data.m_resultStatus,
         }
-
-        # --- TEMPORARY DEBUGGING ---
-        if i == player_car_index:
-            print(f"DEBUG - Player LapData Fields: {fields}", file=sys.stderr)
-        # -------------------------
         
         line = to_influx('LapData', fields, tags)
         if line:
@@ -144,7 +139,6 @@ def process_participants_data(packet: PacketParticipantsData):
     """
     Processes the parsed Participants packet and prints InfluxDB line protocol.
     """
-    print("Processing Participants Packet...", file=sys.stderr)
     for i, participant in enumerate(packet.m_participants):
         if i < packet.m_numActiveCars and participant.m_name:
             tags = {'carIndex': str(i)}
@@ -156,8 +150,6 @@ def process_participants_data(packet: PacketParticipantsData):
             line = to_influx('Participants', fields, tags)
             if line:
                 print(line)
-                # Log to stderr for debugging in Telegraf logs
-                print(f"Writing participant: {line}", file=sys.stderr)
 
 def main():
     try:
