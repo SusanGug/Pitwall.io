@@ -15,6 +15,7 @@ from packets.packet_lap_data import PacketLapData
 UDP_IP = "0.0.0.0"
 UDP_PORT = 20777
 
+# Not All packets are used, but we need to know the size of the packet to slice it correctly
 PACKET_TYPES = {
     0: 'Motion',
     1: 'Session',
